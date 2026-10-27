@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.11.0+policystat.1 (private compatibility candidate)
+--------------------------------------------------
+
+* Target Celery 5.4.0 and Python >=3.8 only.
+* Replace the removed Celery Task import and task logger accessor.
+* Register existing tracker exports as shared tasks, preserving message names,
+  payloads, endpoints, and retry settings; dispatch through registered instances.
+* Add mocked compatibility regressions for registration, dispatch, and retries.
+
 0.8.0
 -----
 

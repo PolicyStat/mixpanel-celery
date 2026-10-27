@@ -1,5 +1,8 @@
 language: python
-python: 3.7
-dist: xenial
+python:
+  - "3.8"
+  - "3.10"
+dist: focal
 install: pip install tox
-script: tox
+script:
+  - if [ "$TRAVIS_PYTHON_VERSION" = "3.8" ]; then tox -e py38-django32-celery54; else tox -e py310-django32-celery54; fi

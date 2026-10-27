@@ -1,2 +1,2 @@
-celery>=2.5
+celery==5.4.0
 six

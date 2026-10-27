@@ -1,3 +1,4 @@
+# coding: utf-8
 from __future__ import absolute_import, unicode_literals
 
 import base64
@@ -8,7 +9,7 @@ import unittest
 from datetime import datetime
 from six import text_type
 from six.moves import urllib
-from mock import patch
+from unittest.mock import patch
 
 from mixpanel.tests.utils import eager_tasks
 from mixpanel.tasks import (
@@ -94,14 +95,13 @@ class TasksTestCase(unittest.TestCase):
 class EventTrackerTest(TasksTestCase):
 
     def test_disable(self):
-        et = EventTracker()
+        et = event_tracker._get_current_object()
         mp_settings.MIXPANEL_DISABLE = True
 
         def _fake_get_connection():
             assert False, "Should bail out before trying to get a connection."
-        et._get_connection = _fake_get_connection
-
-        et('foo')
+        with patch.object(et, '_get_connection', _fake_get_connection):
+            et('foo')
 
     def test_run_priority_default_true(self):
         mp_settings.MIXPANEL_TEST_PRIORITY = True
@@ -350,7 +350,7 @@ class BrokenRequestsTest(TasksTestCase):
     def test_failed_request(self):
         self.response.status = 400
         with eager_tasks():
-            result = EventTracker.delay('event_foo')
+            result = event_tracker.delay('event_foo')
         self.assertNotEqual(result.traceback, None)
 
     def test_failed_socket_request(self):
@@ -359,7 +359,7 @@ class BrokenRequestsTest(TasksTestCase):
 
         self.response.read = new_read
         with eager_tasks():
-            result = EventTracker.delay('event_foo')
+            result = event_tracker.delay('event_foo')
         self.assertNotEqual(result.traceback, None)
 
 

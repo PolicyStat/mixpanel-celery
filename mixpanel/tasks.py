@@ -1,3 +1,4 @@
+# coding: utf-8
 from __future__ import absolute_import, unicode_literals
 
 import base64
@@ -7,10 +8,14 @@ import logging
 import socket
 import sys
 
-from celery.task import Task
+from celery import Task
+from celery import shared_task
 from six.moves import http_client, urllib
 
-from .conf import settings as mp_settings
+from mixpanel.conf import settings as mp_settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class EventTracker(Task):
@@ -42,7 +47,6 @@ class EventTracker(Task):
         putting the events on a high-priority queue at Mixpanel for testing
         purposes.
         """
-        logger = self.get_logger(**kwargs)
         if mp_settings.MIXPANEL_DISABLE:
             logger.info(
                 "Mixpanel disabled; not recording event: <%s>" % event_name,
@@ -51,14 +55,7 @@ class EventTracker(Task):
 
         logger.info("Recording event: <%s>" % event_name)
 
-        # Celery 3.x changed the way the logger could be accessed
-        if hasattr(logger, 'getEffectiveLevel'):
-            # celery 3.x
-            effective_level = logger.getEffectiveLevel()
-        else:
-            # Fall back to celery 2.x support
-            effective_level = logger.logger.getEffectiveLevel()
-
+        effective_level = logger.getEffectiveLevel()
         if effective_level == logging.DEBUG:
             http_client.HTTPConnection.debuglevel = 1
 
@@ -150,7 +147,11 @@ class EventTracker(Task):
         return True
 
 
-event_tracker = EventTracker()
+event_tracker = shared_task(
+    bind=True,
+    base=EventTracker,
+    name=EventTracker.name,
+)(EventTracker.run)
 
 
 class PeopleTracker(EventTracker):
@@ -255,7 +256,11 @@ class PeopleTracker(EventTracker):
         return params
 
 
-people_tracker = PeopleTracker()
+people_tracker = shared_task(
+    bind=True,
+    base=PeopleTracker,
+    name=PeopleTracker.name,
+)(PeopleTracker.run)
 
 
 class FunnelEventTracker(EventTracker):
@@ -279,7 +284,6 @@ class FunnelEventTracker(EventTracker):
         ``properties`` is a dictionary of key/value pairs
         describing the funnel event. A ``distinct_id`` is required.
         """
-        logger = self.get_logger(**kwargs)
         logger.info("Recording funnel: <%s>-<%s>" % (funnel, step))
 
         properties = self._add_funnel_properties(
@@ -308,4 +312,8 @@ class FunnelEventTracker(EventTracker):
         return properties
 
 
-funnel_tracker = FunnelEventTracker()
+funnel_tracker = shared_task(
+    bind=True,
+    base=FunnelEventTracker,
+    name=FunnelEventTracker.name,
+)(FunnelEventTracker.run)
