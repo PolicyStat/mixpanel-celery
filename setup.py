@@ -14,11 +14,7 @@ CLASSIFIERS = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: POSIX",
     "Programming Language :: Python",
-    'Programming Language :: Python :: 2.6',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3.3',
-    'Programming Language :: Python :: 3.4',
-    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3',
     "Topic :: Internet",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -134,6 +130,7 @@ class RunDjangoTests(Command):
 setup(
     name=NAME,
     version=meta['VERSION'],
+    python_requires='>=3.8',
     description=meta['doc'],
     author=meta['author'],
     author_email=meta['contact'],
